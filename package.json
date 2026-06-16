@@ -12,9 +12,11 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "ingest": "tsx scripts/ingest.ts"
+    "ingest": "tsx scripts/ingest.ts",
+    "summarize": "tsx scripts/summarize.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.2",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4"
