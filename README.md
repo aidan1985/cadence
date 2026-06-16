@@ -38,8 +38,15 @@ npm run dev      # http://localhost:3000
 
 ## CI / Deployment
 
-- **CI** (`.github/workflows/ci.yml`) runs lint, typecheck, format check, and
-  build on every push to `main` and on every pull request.
+- **CI** (`.github/workflows/ci.yml`) runs lint, typecheck, format check, test,
+  and build on every push to `main` and on every pull request.
 - **Deploy** (`.github/workflows/deploy.yml`) builds the static export and
   publishes it to GitHub Pages on every push to `main`. The production build
   sets `PAGES_BASE_PATH=/cadence` so assets resolve under the project subpath.
+
+The live skeleton is at <https://aidan1985.github.io/cadence/>.
+
+## Architecture decisions
+
+Non-obvious foundation calls (hosting, Node version, spend boundaries) are
+recorded in [`docs/adr/0001-phase-0-foundation.md`](docs/adr/0001-phase-0-foundation.md).
