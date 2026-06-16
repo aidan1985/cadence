@@ -1,0 +1,64 @@
+name: Ingest GitHub PRs
+
+# Run on a schedule and allow manual triggers. After ingesting, the data file
+# is committed back to main so the next deploy picks it up automatically.
+on:
+  schedule:
+    # Every 6 hours
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "Only fetch PRs merged at/after this ISO-8601 date (e.g. 2026-01-01). Defaults to last sync cursor."
+        required: false
+        default: ""
+      repo:
+        description: 'Repo to ingest as "owner/repo". Defaults to GITHUB_REPO var.'
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  ingest:
+    name: Fetch merged PRs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ingest
+        env:
+          GITHUB_TOKEN: ${{ secrets.CADENCE_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ inputs.repo || vars.GITHUB_REPO || 'aidan1985/cadence' }}
+          CADENCE_DB_PATH: data/cadence.db
+          INGEST_SINCE: ${{ inputs.since }}
+        run: |
+          ARGS=""
+          if [ -n "$INGEST_SINCE" ]; then
+            ARGS="--since $INGEST_SINCE"
+          fi
+          if [ -n "${{ inputs.repo }}" ]; then
+            ARGS="$ARGS --repo ${{ inputs.repo }}"
+          fi
+          npm run ingest -- $ARGS
+
+      - name: Commit updated data store
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/cadence.db
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: ingest PRs [skip ci]"
+            git push
+          fi
